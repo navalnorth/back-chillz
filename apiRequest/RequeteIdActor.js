@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 const https = require('https');
 
 // Remplacez par le nom d'un acteur que vous souhaitez rechercher
