@@ -33,11 +33,22 @@ router.get('/:film', async (req, res) => {
                 const body = Buffer.concat(chunks).toString();
                 const jsonResponse = JSON.parse(body);
 
+                // Log pour vérifier la structure de la réponse
                 console.log(jsonResponse);
-                const result = []
-                result.push(jsonResponse)
-                // Retourner la réponse à l'utilisateur
-                res.status(200).json(jsonResponse);
+
+                // Extraire l'ID IMDb du film
+                let imdbId;
+                if (jsonResponse.results && jsonResponse.results.length > 0) {
+                    imdbId = jsonResponse.results[0].imdb_id; // Extraction de l'ID
+                }
+
+                if (imdbId) {
+                    console.log(`ID IMDb du film: ${imdbId}`);
+                    // Retourner l'ID et les informations du film
+                    res.status(200).json({ imdb_id: imdbId, film: jsonResponse.results[0] });
+                } else {
+                    res.status(404).json({ message: "Film non trouvé" });
+                }
             });
         });
 
