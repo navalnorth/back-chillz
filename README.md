@@ -47,7 +47,7 @@ Instructions pour installer et exécuter l'application localement.
     
 ## Contribuer
 
-Ce projet est uniquement modifiable par les membres de l'équipe. Aucune contribution externe n'est acceptée pour le moment. Si vous faites partie de l'équipe et souhaitez proposer des modifications, veuillez utiliser JIRA pour suivre les tâches et les soumettre à l'équipe.
+Ce projet est uniquement modifiable par les membres de l'équipe. Aucune contribution externe n'est acceptée pour le moment.
 
 
 
