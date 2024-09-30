@@ -1,1 +1,1 @@
-Suivi des bugs
+![Mon image](merge.png)
