@@ -1,45 +1,59 @@
 const express = require('express');
 const router = express.Router();
 require('dotenv').config();
-const connectToDb = require('../db');
-
-const http = require('https');
+const https = require('https');
 
 
-router.get('/search/:film', async (req, res) => {
+router.get('/:film', async (req, res) => {
     try {
-
         const film = req.params.film;
+
+        // Encodage de l'URL pour échapper les caractères spéciaux comme les espaces
+        const encodedFilm = encodeURIComponent(film);
 
         const options = {
             method: 'GET',
             hostname: 'moviesminidatabase.p.rapidapi.com',
             port: null,
-            path: `/movie/imdb_id/byTitle/${film}/`,
+            path: `/movie/imdb_id/byTitle/${encodedFilm}/`,  // Utilisation du film encodé
             headers: {
-                'x-rapidapi-key': '4b1e857466mshc87f9e8bc157972p184376jsn043ac2c26541',
+                'x-rapidapi-key': process.env.RAPIDAPI_KEY,  // Récupération de la clé depuis .env
                 'x-rapidapi-host': 'moviesminidatabase.p.rapidapi.com'
             }
         };
-        
-        const req = http.request(options, function (res) {
+
+        const externalReq = https.request(options, function (externalRes) {
             const chunks = [];
-        
-            res.on('data', function (chunk) {
+
+            externalRes.on('data', function (chunk) {
                 chunks.push(chunk);
             });
-        
-            res.on('end', function () {
-                const body = Buffer.concat(chunks);
-                console.log(body.toString());
+
+            externalRes.on('end', function () {
+                const body = Buffer.concat(chunks).toString();
+                const jsonResponse = JSON.parse(body);
+
+                console.log(jsonResponse);
+                const result = []
+                result.push(jsonResponse)
+                // Retourner la réponse à l'utilisateur
+                res.status(200).json(jsonResponse);
             });
         });
-        
-        req.end();
 
-        res.status(200).json(quiz); // Retourner le quiz avec ses questions
+        externalReq.on('error', (error) => {
+            console.error('Erreur lors de la requête API:', error);
+            res.status(500).json({ message: 'Erreur lors de la communication avec l\'API externe' });
+        });
+
+        externalReq.end();
 
     } catch (err) {
-        res.status(500).send(err); // Gestion des erreurs
+        console.error('Erreur côté serveur:', err);
+        res.status(500).json({ message: 'Erreur interne du serveur' });
     }
 });
+
+
+module.exports = router;
+

@@ -43,8 +43,8 @@ connectToDb();
 // app.use('/api/users', userRoutes);
 // app.use('/api/admin/', profilRoutes);
 
-// const searchRoutes = require('./apiRequest/movie.js');
-// app.use('/api/search/', searchRoutes)
+const searchRoutes = require('./apiRequest/movie.js');
+app.use('/api/search/', searchRoutes)
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
