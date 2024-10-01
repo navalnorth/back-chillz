@@ -3,7 +3,7 @@ const router = express.Router()
 const bcrypt = require('bcrypt')
 const mysql = require('mysql2')
 require('dotenv').config();
-const connectToDb = require('../db');
+const connectToDb = require('../db.js');
 const jwt = require('jsonwebtoken');
 
 
@@ -139,80 +139,17 @@ router.post('/login', async (req, res) => {
 
         // Générer le token JWT avec la clé secrète de l'environnement
         const token = jwt.sign(
-            { username: user.username },
+            { id: user.id, username: user.username },
             process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE }
+            { expiresIn: process.env.JWT_EXPIRES_IN }
         )
 
         res.status(200).json({ message: 'Utilisateur connecté', token: token });
-    } catch (err) { res.status(500).json({ message: 'Erreur de connexion au serveur', error: err }) }
+    } catch (err) { 
+        console.error('Erreur lors de la connexion:', err)
+        res.status(500).json({ message: 'Erreur de connexion au serveur', error: err }) 
+    }
 })
-
-
-/**
- * @swagger
- * /users:
- *   get:
- *     summary: Récupérer tous les utilisateurs
- *     tags:
- *       - Utilisateurs
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Liste des utilisateurs
- *         content: 
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 24
- *                   email:
- *                     type: string
- *                     example: "Toto@example.com"
- *                   username:
- *                     type: string
- *                     example: toto
- *                   nom:
- *                     type: string
- *                     example: Dupont
- *                   prenom:
- *                     type: string
- *                     example: Jean
- *                   telephone:
- *                     type: string
- *                     example: "0638494059"
- *                   age:
- *                     type: integer
- *                     example: 23
- *                   ville:
- *                     type: string
- *                     example: Paris
- *                   role:
- *                     type: string
- *                     example: "admin"
- *                   created_at:
- *                     type: string
- *                     format: date-time
- *                     example: "2024-09-02T07:11:31.000Z"
- *       401:
- *         description: Non autorisé
- *       500:
- *         description: Erreur serveur
- */
-router.get('/', async (req, res) => {
-    try { 
-        const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la base de données' })}
-
-        const [results] = await db.query('SELECT * FROM users')
-        res.status(200).json(results)
-    } catch (err) { res.status(500).send(err) }
-});
 
 
 
@@ -274,7 +211,7 @@ router.get('/profile/:id', async (req, res) => {
     } catch (err) {
         res.status(500).send(err)
     }
-});
+})
 
 
 
@@ -285,10 +222,10 @@ router.put('/profile/:id', async (req, res) => {
         if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
 
         const userId = req.params.id
-        const { username, prenom, nom, telephone, ville } = req.body
+        const { username, email, telephone, ville } = req.body
         
-        const sql = (`UPDATE users SET username = ?, prenom = ?, nom = ?, telephone = ?, ville = ? WHERE id_user = ?`)
-        const [results] = await db.query(sql, [username, prenom, nom, telephone, ville, userId])
+        const sql = (`UPDATE users SET username = ?, email = ?, telephone = ? WHERE id_user = ?`)
+        const [results] = await db.query(sql, [username, email, telephone, ville , userId])
 
         res.status(200).json({ message: 'Profil mis à jour !' })
     } catch (err) {
