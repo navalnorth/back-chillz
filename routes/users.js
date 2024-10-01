@@ -397,5 +397,73 @@ router.put('/profile/mdp/:id', async (req, res) => {
 
 
 
+/**
+ * @swagger
+ * /profile/supprimerCompte/{id}:
+ *   delete:
+ *     summary: Supprime le compte d'un utilisateur
+ *     tags:
+ *       - Utilisateurs
+ *     description: Supprime le compte de l'utilisateur dont l'ID est fourni.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID de l'utilisateur dont le compte doit être supprimé
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Compte supprimé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Compte supprimé avec succès"
+ *       404:
+ *         description: Utilisateur non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Utilisateur non trouvé !"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur serveur"
+ *                 error:
+ *                   type: string
+ */
+router.delete('/profile/supprimerCompte/:id', async (req, res) => {
+    try {
+        const db = await connectToDb()
+        if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
+
+        const userId = req.params.id
+
+        const deleteSQL = 'DELETE FROM users WHERE id_user = ?'
+        await db.query(deleteSQL, [userId])
+
+        res.status(200).json({ message: 'Compte supprimé avec succès'})
+    } catch (err) {
+        console.error('Erreur lors de la suppression du compte :', err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+})
+
+
+
 
 module.exports = router
