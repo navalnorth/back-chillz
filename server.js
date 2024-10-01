@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mysql = require('mysql2');
 const bodyParser = require('body-parser');
@@ -26,7 +25,7 @@ const swaggerOptions = {
             contact: {
                 name: 'Tochska'
             },
-            servers: [{ url: 'http://localhost:3000' }]
+            servers: [{ url: 'http://localhost:3000/' }]
         }
     },
     apis: ['./apiRequest/*.js']
@@ -38,11 +37,8 @@ app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 connectToDb();
 
 const userRoutes = require('./routes/users')
-// const profilRoutes = require('./routes/admin')
 
 app.use('/api/users', userRoutes);
-// app.use('/api/admin/', profilRoutes);
-
 
 const retrievegetMovieIdByTitle = require('./apiRequest/retrievegetMovieIdByTitle.js');
 app.use('/api/search/film', retrievegetMovieIdByTitle);
@@ -59,7 +55,6 @@ app.use('/api/search/seriebyrating', listgetSeriesOrderByRatings);
 const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRatings.js')
 app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
 
-
 app.listen(process.env.PORT, () => {
-    console.log(`Server is running on port ${process.env.PORT}`);
+    console.log(`Server is running on port ${process.env.PORT}`)
 })
