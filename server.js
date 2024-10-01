@@ -56,5 +56,5 @@ const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRati
 app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
 
 app.listen(process.env.PORT, () => {
-    console.log(`Server is running on port ${process.env.PORT}`)
+    console.log(`Server is running on port ${process.env.PORT}`);
 })

@@ -68,6 +68,9 @@ router.post('/register', async (req, res) => {
         if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la base de données' }) }
 
         const { username, nom, prenom, telephone, age, email, mdp, ville } = req.body;
+        if (!username || !nom || !prenom || !telephone || !age || !email || !mdp || !ville) {
+            return res.status(400).json({ message: 'Tous les champs sont requis.' });
+        }
         const hashedmdp = await bcrypt.hash(mdp, 10)
 
         const sql = 'INSERT INTO users (username, prenom, nom, telephone, age, email, ville, mdp ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
@@ -462,6 +465,7 @@ router.delete('/profile/supprimerCompte/:id', async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error: err });
     }
 })
+
 
 
 
