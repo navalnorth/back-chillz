@@ -37,14 +37,15 @@ app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 connectToDb();
 
-// const userRoutes = require('./routes/users')
-// const profilRoutes = require('./routes/admin')
+const userRoutes = require('./routes/users')
+const profilRoutes = require('./routes/admin')
 
-// app.use('/api/users', userRoutes);
-// app.use('/api/admin/', profilRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/admin/', profilRoutes);
 
-// const searchRoutes = require('./apiRequest/movie.js');
-// app.use('/api/search/', searchRoutes)
+const searchRoutes = require('./apiRequest/movie.js');
+app.use('/api/search/', searchRoutes)
+
 const retrievegetMovieIdByTitle = require('./apiRequest/retrievegetMovieIdByTitle.js');
 app.use('/api/search/', retrievegetMovieIdByTitle)
 

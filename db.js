@@ -9,7 +9,6 @@ const connectToDb = async () => {
 
 
     if (db) {
-
         console.log(timeOnly, 'Already connected to the database');
         return db;
     }
