@@ -373,7 +373,7 @@ router.put('/profile/mdp/:id', async (req, res) => {
         const sql = `SELECT mdp FROM users WHERE id_user = ?`
         const [userResult] = await db.query(sql, [userId])
 
-        if (userResult.length ===0) {
+        if (userResult.length === 0) {
             return res.status(404).json({ messag: 'Utilisateur non trouvé !'})
         }
 
