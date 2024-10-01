@@ -52,3 +52,8 @@ Ce projet est uniquement modifiable par les membres de l'équipe. Aucune contrib
 
 
 ![Mon image](merge.png)
+
+
+## Swagger 
+
+![Mon image](swagger.png)

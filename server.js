@@ -19,11 +19,11 @@ const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
-            title: 'API quiz',
+            title: 'API Chills',
             version: '0.0.1',
-            description: 'Je suis une super API',
+            description: 'API Chills est une interface pour accéder à des informations sur les films et les séries, permettant aux utilisateurs de rechercher par titre, genre et note. Cette API offre des fonctionnalités de recherche avancées pour améliorer l\'expérience utilisateur, en fournissant des données provenant de diverses sources de films et de séries.',
             contact: {
-                name: 'Tochska'
+                name: 'Tochska',
             },
             servers: [{ url: 'http://localhost:3000/' }]
         }
