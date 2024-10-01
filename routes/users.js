@@ -215,7 +215,60 @@ router.get('/profile/:id', async (req, res) => {
 
 
 
-
+/**
+ * @swagger
+ * /profile/{id}:
+ *   put:
+ *     summary: Met à jour le profil d'un utilisateur
+ *     tags:
+ *       - Utilisateurs
+ *     description: Met à jour les informations de profil d'un utilisateur basé sur l'ID fourni.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID de l'utilisateur à mettre à jour
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Le nouveau nom d'utilisateur
+ *                 example: john_doe
+ *               email:
+ *                 type: string
+ *                 description: Le nouvel e-mail de l'utilisateur
+ *                 example: john.doe@example.com
+ *               telephone:
+ *                 type: string
+ *                 description: Le nouveau numéro de téléphone de l'utilisateur
+ *                 example: "+33123456789"
+ *               ville:
+ *                 type: string
+ *                 description: La nouvelle ville de l'utilisateur
+ *                 example: Paris
+ *     responses:
+ *       200:
+ *         description: Profil mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profil mis à jour !"
+ *       400:
+ *         description: Requête invalide - Paramètres manquants ou incorrects
+ *       500:
+ *         description: Erreur interne du serveur ou base de données
+ */
 router.put('/profile/:id', async (req, res) => {
     try {
         const db = await connectToDb()
@@ -233,6 +286,40 @@ router.put('/profile/:id', async (req, res) => {
     }
 });
 
+
+
+router.put('/profile/mdp/:id', async (req, res) => {
+    try {
+        const db = await connectToDb()
+        if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
+
+        const { oldmdp, newmdp } = req.body
+        const userId = req.params.id
+
+        const sql = `SELECT mdp FROM users WHERE id_user = ?`
+        const [userResult] = await db.query(sql, [userId])
+
+        if (userResult.length ===0) {
+            return res.status(404).json({ messag: 'Utilisateur non trouvé !'})
+        }
+
+        const user = userResult[0]
+        const isMatch = await bcrypt.compare(oldmdp, user.mdp)
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Ancien mot de passe incorrect !'})
+        }
+
+        const hashedmdp = await bcrypt.hash(newmdp, 10)
+
+        const updatesql = 'UPDATE users SET mdp = ? WHERE id_user = ?'
+        await db.query(updatesql, [hashedmdp, userId])
+        
+        res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
+    } catch (err) {
+        console.error('Erreur lors de la mise à jour du mot de passe :', err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+})
 
 
 

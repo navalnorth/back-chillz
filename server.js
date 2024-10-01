@@ -40,20 +40,20 @@ const userRoutes = require('./routes/users')
 
 app.use('/api/users', userRoutes);
 
-const retrievegetMovieIdByTitle = require('./apiRequest/retrievegetMovieIdByTitle.js');
-app.use('/api/search/film', retrievegetMovieIdByTitle);
+// const retrievegetMovieIdByTitle = require('./apiRequest/retrievegetMovieIdByTitle.js');
+// app.use('/api/search/film', retrievegetMovieIdByTitle);
 
-const retrievegetSeriesIdByTitle = require('./apiRequest/retrievegetSeriesIdByTitle.js');
-app.use('/api/search/serie', retrievegetSeriesIdByTitle);
+// const retrievegetSeriesIdByTitle = require('./apiRequest/retrievegetSeriesIdByTitle.js');
+// app.use('/api/search/serie', retrievegetSeriesIdByTitle);
 
-const listGetGenre = require('./apiRequest/listGetGenre.js');
-app.use('/api/search/genre', listGetGenre);
+// const listGetGenre = require('./apiRequest/listGetGenre.js');
+// app.use('/api/search/genre', listGetGenre);
 
-const listgetSeriesOrderByRatings = require('./apiRequest/listgetSeriesOrderByRatings.js')
-app.use('/api/search/seriebyrating', listgetSeriesOrderByRatings);
+// const listgetSeriesOrderByRatings = require('./apiRequest/listgetSeriesOrderByRatings.js')
+// app.use('/api/search/seriebyrating', listgetSeriesOrderByRatings);
 
-const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRatings.js')
-app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
+// const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRatings.js')
+// app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`)
