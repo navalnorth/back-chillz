@@ -288,6 +288,80 @@ router.put('/profile/:id', async (req, res) => {
 
 
 
+/**
+ * @swagger
+ * /profile/mdp/{id}:
+ *   put:
+ *     summary: Met à jour le mot de passe de l'utilisateur
+ *     tags:
+ *       - Utilisateurs
+ *     description: Permet à un utilisateur de mettre à jour son mot de passe en fournissant l'ancien et le nouveau mot de passe.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID de l'utilisateur dont le mot de passe doit être mis à jour
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               oldmdp:
+ *                 type: string
+ *                 description: Ancien mot de passe de l'utilisateur
+ *                 example: "ancienMotDePasse123"
+ *               newmdp:
+ *                 type: string
+ *                 description: Nouveau mot de passe de l'utilisateur
+ *                 example: "nouveauMotDePasse456"
+ *     responses:
+ *       200:
+ *         description: Mot de passe mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Mot de passe mis à jour avec succès"
+ *       400:
+ *         description: Ancien mot de passe incorrect
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Ancien mot de passe incorrect !"
+ *       404:
+ *         description: Utilisateur non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Utilisateur non trouvé !"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur serveur"
+ *                 error:
+ *                   type: string
+ */
 router.put('/profile/mdp/:id', async (req, res) => {
     try {
         const db = await connectToDb()
@@ -312,7 +386,7 @@ router.put('/profile/mdp/:id', async (req, res) => {
         const hashedmdp = await bcrypt.hash(newmdp, 10)
 
         const updatesql = 'UPDATE users SET mdp = ? WHERE id_user = ?'
-        await db.query(updatesql, [hashedmdp, userId])
+        await db.query(updatesql, [hashedmdp, userId]);
         
         res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
     } catch (err) {
