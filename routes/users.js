@@ -69,7 +69,7 @@ router.post('/register', async (req, res) => {
 
         const { username, nom, prenom, telephone, age, email, mdp, ville } = req.body;
         if (!username || !nom || !prenom || !telephone || !age || !email || !mdp || !ville) {
-            return res.status(400).json({ message: 'Tous les champs sont requis.' });
+            return res.status(400).json({ message: 'Tous les champs sont requis.' })
         }
         const hashedmdp = await bcrypt.hash(mdp, 10)
 
