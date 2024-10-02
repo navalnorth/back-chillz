@@ -8,6 +8,63 @@ const jwt = require("jsonwebtoken");
 
 
 
+/**
+ * @swagger
+ * /favoris/{id}:
+ *   post:
+ *     summary: Ajouter un film aux favoris d'un utilisateur
+ *     tags:
+ *       - Favoris
+ *     description: Ajoute un film aux favoris d'un utilisateur si celui-ci n'est pas déjà présent.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de l'utilisateur
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id_filmAPI:
+ *                 type: integer
+ *                 example: 12345
+ *     responses:
+ *       201:
+ *         description: Film ajouté aux favoris avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Film ajouté aux favoris avec succès !"
+ *       400:
+ *         description: Film déjà présent dans les favoris
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Le film est dèja dans vos favoris."
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur interne du serveur."
+ */
 router.post("/favoris/:id", async (req, res) => {
   try {
     const db = await connectToDb();
@@ -30,21 +87,76 @@ router.post("/favoris/:id", async (req, res) => {
 
 
 
-router.get('/historiqueTout/:id', async (req, res) => {
+/**
+ * @swagger
+ * /favorisTout/{id}:
+ *   get:
+ *     summary: Récupérer la liste des films favoris d'un utilisateur
+ *     tags:
+ *       - Favoris
+ *     description: Récupère la liste des films que l'utilisateur a ajoutés à ses favoris.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de l'utilisateur
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Liste des favoris récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 favoris:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id_user:
+ *                         type: string
+ *                         example: "1"
+ *                       id_filmAPI:
+ *                         type: integer
+ *                         example: 12345
+ *       404:
+ *         description: Aucun film trouvé pour cet utilisateur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Aucun film trouvé pour cet utilisateur."
+ *       500:
+ *         description: Erreur interne du serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur interne du serveur."
+ */
+router.get('/favorisTout/:id', async (req, res) => {
     try {
         const db = await connectToDb()
         if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la ase de données'})}
         
         const userId = req.params.id
 
-        const [historique] = await db.query("SELECT * FROM historique where id_user = ?", [userId])
-        if (historique.length === 0) {
+        const [favoris] = await db.query("SELECT * FROM favoris where id_user = ?", [userId])
+        if (favoris.length === 0) {
             return res.status(404).json({ message: 'Aucun film trouvé trouvé pour cet utilisateur.' })
         }
 
-        return res.status(200).json({ historique })
+        return res.status(200).json({ favoris })
     } catch (err) {
-        console.error("Erreur lors de l'ajout de la liste d'historique", err);
+        console.error("Erreur lors de l'ajout de la liste de favoris", err);
         return res.status(500).json({ message: "Erreur interne du serveur"})
     }
 })

@@ -56,8 +56,8 @@ app.use('/api/search/seriebyrating', listgetSeriesOrderByRatings);
 const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRatings.js')
 app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
 
-const listFilmByActor = require('./apiRequest/listFilmByActor.js')
-app.use('/api/search/filmbyactorname', listFilmByActor)
+// const listFilmByActor = require('./apiRequest/listFilmByActor.js')
+// app.use('/api/search/filmbyactorname', listFilmByActor)
 
 const listSerieByActor = require('./apiRequest/listSerieByActor.js')
 app.use('/api/search/seriebyactorname', listSerieByActor)
