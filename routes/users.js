@@ -204,7 +204,7 @@ router.get('/profile/:id', async (req, res) => {
         const [results] = await db.query(`SELECT username, prenom, nom, telephone, age, email, ville FROM users WHERE id_user = ?`, [userId])
 
         if (results.length === 0) {
-            return res.status(404).json({ message: 'Utilisateur non trouvé'})
+            return res.status(404).json({ message: 'Utilisateur non trouvé !'})
         }
 
         res.status(200).json(results[0])
