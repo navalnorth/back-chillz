@@ -5,8 +5,10 @@ const mysql = require('mysql2')
 require('dotenv').config();
 const connectToDb = require('../db.js');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer')
+const crypto = require('crypto')
 
-
+const twoFA = {}
 
 /**
  * @swagger
@@ -71,7 +73,6 @@ router.post('/register', async (req, res) => {
         const hashedmdp = await bcrypt.hash(mdp, 10)
 
         const sql = 'INSERT INTO users (username, prenom, nom, telephone, age, email, ville, mdp ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-
         const [results] = await db.query(sql, [username, prenom, nom, telephone, age, email, ville, hashedmdp ])
         res.status(201).json({ message: 'Utilisateur créé' })
     } catch (err) {
@@ -89,7 +90,6 @@ router.post('/register', async (req, res) => {
  *     summary: Connexion d'un utilisateur
  *     tags:
  *       - Authentification
- *     description: Authentifie un utilisateur et génère un jeton JWT si les informations sont correctes.
  *     requestBody:
  *       required: true
  *       content:
@@ -105,7 +105,7 @@ router.post('/register', async (req, res) => {
  *                 example: "password123"
  *     responses:
  *       200:
- *         description: Utilisateur connecté avec succès
+ *         description: Code de vérification envoyé avec succès
  *         content:
  *           application/json:
  *             schema:
@@ -113,14 +113,30 @@ router.post('/register', async (req, res) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Utilisateur connecté"
- *                 token:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5..."
+ *                   example: "Code de vérification envoyé. Veuillez vérifier votre email."
  *       401:
  *         description: Email ou mot de passe incorrect
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Email ou mot de passe incorrect"
  *       500:
- *         description: Erreur de connexion au serveur
+ *         description: Erreur lors de l'envoi de l'email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur lors de l'envoi de l'email."
+ *                 error:
+ *                   type: string
+ *                   example: "Détails de l'erreur"
  */
 router.post('/login', async (req, res) => {
     try {
@@ -131,25 +147,134 @@ router.post('/login', async (req, res) => {
 
         const sql = 'SELECT * FROM users WHERE username = ?'
         const [results] = await db.query(sql, [username])
-        if (results.length === 0) {return res.status(401).json({ message: 'Email ou mot de passe incorrect' })}
+        if (results.length === 0) { return res.status(401).json({ message: 'Email ou mot de passe incorrect' }) }
 
         const user = results[0];
         const isMatch = await bcrypt.compare(mdp, user.mdp);
-        if (!isMatch) {return res.status(401).json({ message: 'Email ou mot de passe incorrect' })}
+        if (!isMatch) { return res.status(401).json({ message: 'Email ou mot de passe incorrect' }) }
 
-        // Générer le token JWT avec la clé secrète de l'environnement
-        const token = jwt.sign(
-            { id: user.id, username: user.username },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
-        )
+        const code2FA = crypto.randomInt(100000, 999999);
 
-        res.status(200).json({ message: 'Utilisateur connecté', token: token });
-    } catch (err) { 
-        console.error('Erreur lors de la connexion:', err)
-        res.status(500).json({ message: 'Erreur de connexion au serveur', error: err }) 
+        twoFA[user.username] = { code: code2FA, expiresIn: Date.now() + 10 * 60 * 1000 }
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS 
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: 'Votre code de vérification 2FA',
+            html: `<div style="font-family: Arial, sans-serif; text-align: center;">
+                    <h2 style="color: #ff0000;">Code d'authentification</h2>
+                    <p style="font-size: 18px;">Voici votre code pour vous connecter à <strong>Chills</strong>:</p>
+                    <div style="font-size: 24px; font-weight: bold; background-color: #f0f0f0; padding: 10px; display: inline-block;">
+                    ${code2FA}
+                    </div>
+                    <p style="font-size: 14px; color: #ff0000;">Ce code est valable pendant 10 minutes.</p>
+                    </div>`
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({ message: 'Code de vérification envoyé. Veuillez vérifier votre email.' });
+    } catch (err) {
+        console.error('Erreur lors de l\'envoi de l\'email :', err);
+        res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email.', error: err.message });
     }
-})
+});
+
+
+
+/**
+ * @swagger
+ * /verify-2fa:
+ *   post:
+ *     summary: Vérifier le code 2FA
+ *     tags:
+ *       - Authentification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "user123"
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Authentification réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Authentification réussie"
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       401:
+ *         description: Code 2FA invalide ou expiré
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Le code 2FA a expiré ou est invalide"
+ *       500:
+ *         description: Erreur serveur
+ */
+router.post('/verify-2fa', async (req, res) => {
+    const { username, code } = req.body;
+
+    // Vérifier si un code 2FA a été généré pour cet utilisateur
+    const authInfo = twoFA[username];
+    if (!authInfo || authInfo.expiresIn < Date.now()) {
+        return res.status(401).json({ message: 'Le code 2FA a expiré ou est invalide' });
+    }
+
+    // Vérifier si le code 2FA est correct
+    if (authInfo.code !== parseInt(code)) {
+        return res.status(401).json({ message: 'Code 2FA incorrect' });
+    }
+
+    // Supprimer le code 2FA après utilisation
+    delete twoFA[username];
+
+    // Rechercher l'utilisateur dans la base de données pour générer le token
+    const db = await connectToDb();
+    const sql = 'SELECT * FROM users WHERE username = ?';
+    const [results] = await db.query(sql, [username]);
+    if (results.length === 0) {
+        return res.status(401).json({ message: 'Utilisateur introuvable' });
+    }
+
+    const user = results[0];
+
+    // Générer le token JWT avec la clé secrète de l'environnement
+    const token = jwt.sign(
+        { id: user.id, username: user.username },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    // Retourner le token JWT après authentification réussie
+    res.status(200).json({ message: 'Authentification réussie', token: token });
+});
+
 
 
 
@@ -277,7 +402,7 @@ router.put('/profile/:id', async (req, res) => {
         const userId = req.params.id
         const { username, email, telephone, ville } = req.body
         
-        const sql = (`UPDATE users SET username = ?, email = ?, telephone = ? WHERE id_user = ?`)
+        const sql = (`UPDATE users SET username = ?, email = ?, telephone = ?, ville = ? WHERE id_user = ?`)
         const [results] = await db.query(sql, [username, email, telephone, ville , userId])
 
         res.status(200).json({ message: 'Profil mis à jour !' })
@@ -462,7 +587,6 @@ router.delete('/profile/supprimerCompte/:id', async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error: err });
     }
 })
-
 
 
 
