@@ -41,7 +41,6 @@ const userRoutesFavoris = require('./routes/favoris.js')
 const userRoutesUsers = require('./routes/users')
 app.use('/api/users', userRoutesUsers, userRoutesFavoris, userRoutesHistorique);
 
-
 const retrievegetMovieIdByTitle = require('./apiRequest/retrievegetMovieIdByTitle.js');
 app.use('/api/search/film', retrievegetMovieIdByTitle);
 

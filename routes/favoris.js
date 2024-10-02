@@ -30,4 +30,25 @@ router.post("/favoris/:id", async (req, res) => {
 
 
 
+router.get('/historiqueTout/:id', async (req, res) => {
+    try {
+        const db = await connectToDb()
+        if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la ase de données'})}
+        
+        const userId = req.params.id
+
+        const [historique] = await db.query("SELECT * FROM historique where id_user = ?", [userId])
+        if (historique.length === 0) {
+            return res.status(404).json({ message: 'Aucun film trouvé trouvé pour cet utilisateur.' })
+        }
+
+        return res.status(200).json({ historique })
+    } catch (err) {
+        console.error("Erreur lors de l'ajout de la liste d'historique", err);
+        return res.status(500).json({ message: "Erreur interne du serveur"})
+    }
+})
+
+
+
 module.exports = router
