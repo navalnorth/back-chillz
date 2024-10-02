@@ -59,6 +59,9 @@ app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
 const listFilmByActor = require('./apiRequest/listFilmByActor.js')
 app.use('/api/search/filmbyactorname', listFilmByActor)
 
+const listSerieByActor = require('./apiRequest/listSerieByActor.js')
+app.use('/api/search/seriebyactorname', listSerieByActor)
+
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`)
 })
