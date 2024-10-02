@@ -30,4 +30,27 @@ router.post("/favoris/:id", async (req, res) => {
 
 
 
+router.get('/favorisTout/:id', async (req, res) => {
+    try {
+        const db = await connectToDb()
+        if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la ase de données'})}
+        
+        const userId = req.params.id
+
+        const [favoris] = await db.query("SELECT * FROM favori where id_user = ?", [userId])
+
+        if (favoris.length === 0) {
+            return res.status(404).json({ message: 'Aucun favori trouvé pour cet utilisateur.' })
+        }
+
+        return res.status(200).json({ favoris })
+    } catch (err) {
+        console.error("Erreur lors de l'ajout de la liste des favoris", err);
+        return res.status(500).json({ message: "Erreur interne du serveur"})
+
+    }
+})
+
+
+
 module.exports = router
