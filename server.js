@@ -36,10 +36,10 @@ app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 connectToDb();
 
-const userRoutesVision = require('./routes/vision')
-const userRoutes = require('./routes/users')
-app.use('/api/users', userRoutes, userRoutesVision);
-
+const userRoutesHistorique = require('./routes/historique.js')
+const userRoutesFavoris = require('./routes/favoris.js')
+const userRoutesUsers = require('./routes/users')
+app.use('/api/users', userRoutesUsers, userRoutesFavoris, userRoutesHistorique);
 
 const retrievegetMovieIdByTitle = require('./apiRequest/retrievegetMovieIdByTitle.js');
 app.use('/api/search/film', retrievegetMovieIdByTitle);
@@ -55,6 +55,9 @@ app.use('/api/search/seriebyrating', listgetSeriesOrderByRatings);
 
 const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRatings.js')
 app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
+
+const listFilmByActor = require('./apiRequest/listFilmByActor.js')
+app.use('/api/search/filmbyactorname', listFilmByActor)
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`)
