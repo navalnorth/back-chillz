@@ -3,6 +3,48 @@ const router = express.Router();
 require('dotenv').config();
 const https = require('https');
 
+/**
+ * @swagger
+ * /{nom}:
+ *   get:
+ *     summary: Récupère la filmographie des séries d'un acteur par son nom
+ *     description: "Cette route permet de récupérer la filmographie des séries d'un acteur en fonction de son nom en utilisant l'API moviesminidatabase."
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         description: "Le nom de l'acteur pour lequel récupérer la filmographie des séries."
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: "Succès de la requête, renvoie la filmographie des séries de l'acteur."
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 resultat:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       imdb_id:
+ *                         type: string
+ *                         description: "ID IMDb de la série."
+ *                       title:
+ *                         type: string
+ *                         description: "Titre de la série."
+ *                       year:
+ *                         type: string
+ *                         description: "Année de sortie de la série."
+ *       404:
+ *         description: "Acteur non trouvé ou aucune série disponible."
+ *       500:
+ *         description: "Erreur lors de la communication avec l'API externe."
+ */
+
+
 router.get('/:name', async (req, res) => {
     const name = req.params.name;
     const encodedName = encodeURIComponent(name);
