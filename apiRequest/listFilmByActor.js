@@ -7,29 +7,43 @@ const https = require('https');
  * @swagger
  * /{name}:
  *   get:
- *     summary: Récupère l'ID IMDb d'un acteur par son nom
- *     description: "Cette route permet de récupérer l'ID IMDb d'un acteur en fonction de son nom en utilisant l'API moviesminidatabase."
+ *     summary: Récupère la filmographie d'un acteur par son nom
+ *     description: "Cette route permet de récupérer la filmographie d'un acteur en fonction de son nom en utilisant l'API moviesminidatabase."
  *     parameters:
  *       - in: path
  *         name: name
  *         required: true
- *         description: "Le nom de l'acteur pour lequel récupérer l'ID IMDb."
+ *         description: "Le nom de l'acteur pour lequel récupérer la filmographie."
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: "Succès de la requête, renvoie l'ID IMDb de l'acteur."
+ *         description: "Succès de la requête, renvoie la filmographie de l'acteur."
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: string
- *                   description: "ID IMDb de l'acteur."
+ *                 resultat:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       imdb_id:
+ *                         type: string
+ *                         description: "ID IMDb du film."
+ *                       title:
+ *                         type: string
+ *                         description: "Titre du film."
+ *                       year:
+ *                         type: string
+ *                         description: "Année de sortie du film."
+ *       404:
+ *         description: "Acteur non trouvé ou aucune filmographie disponible."
  *       500:
  *         description: "Erreur lors de la communication avec l'API externe."
  */
+
 router.get('/:name', async (req, res) => {
     try {
         const name = req.params.name;
