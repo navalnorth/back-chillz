@@ -7,6 +7,7 @@ const connectToDb = require('../db.js');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer')
 const crypto = require('crypto')
+const validator = require('validator');
 
 const twoFA = {}
 
@@ -65,21 +66,75 @@ const twoFA = {}
  *         description: Erreur serveur
  */
 router.post('/register', async (req, res) => {
-    try { 
-        const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la base de données' }) }
+    try {
+        const db = await connectToDb();
+        if (!db) {
+            return res.status(500).json({ message: 'Erreur de connexion à la base de données' });
+        }
 
-        const { username, nom, prenom, telephone, age, email, mdp, ville } = req.body;
-        const hashedmdp = await bcrypt.hash(mdp, 10)
+        const { username, nom, prenom, age, email, mdp } = req.body;
 
-        const sql = 'INSERT INTO users (username, prenom, nom, telephone, age, email, ville, mdp ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-        const [results] = await db.query(sql, [username, prenom, nom, telephone, age, email, ville, hashedmdp ])
-        res.status(201).json({ message: 'Utilisateur créé' })
+        // Vérification des champs
+        const champsRequis = ['username', 'nom', 'prenom', 'age', 'email', 'mdp'];
+        for (const champ of champsRequis) {
+            if (!req.body[champ]) {
+                return res.status(400).json({ message: `Le champ ${champ} est manquant` });
+            }
+        }
+
+        // Validation de la longueur du champ username
+        if (username.length < 3) {
+            return res.status(400).json({ message: "La longueur du username doit être égale ou supérieure à 3" });
+        }
+
+        // Validation du format du champ email
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ message: "Le format de l'email est invalide" });
+        }
+
+        // Vérification si l'email est déjà utilisé
+        const emailCheck = 'SELECT * FROM users WHERE email = ?';
+        const [emailCheckResult] = await db.query(emailCheck, [email]);
+        if (emailCheckResult.length > 0) {
+            return res.status(400).json({ message: "Cet email est déjà utilisé." });
+        }
+
+        // Vérification si le username est déjà utilisé
+        const usernameCheck = 'SELECT * FROM users WHERE username = ?';
+        const [usernameCheckResult] = await db.query(usernameCheck, [username]);
+        if (usernameCheckResult.length > 0) {
+            return res.status(400).json({ message: "Ce username est déjà utilisé." });
+        }
+
+        // Validation de la longueur du mot de passe
+        if (!validator.isLength(mdp, { min: 12 })) {
+            return res.status(400).json({ message: "Le mot de passe doit contenir au moins 12 caractères." });
+        }
+
+        // Vérification des critères supplémentaires pour le mot de passe
+        const hasUpperCase = /[A-Z]/.test(mdp);
+        const hasLowerCase = /[a-z]/.test(mdp);
+        const hasNumber = /\d/.test(mdp);
+        const hasSpecialChar = /[^\w\s]/.test(mdp);
+
+        if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+            return res.status(400).json({
+                message: "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial."
+            });
+        }
+
+        const hashedmdp = await bcrypt.hash(mdp, 10);
+
+        const sql = 'INSERT INTO users (username, prenom, nom, age, email, mdp) VALUES (?, ?, ?, ?, ?, ?)';
+        const [results] = await db.query(sql, [username, prenom, nom, age, email, hashedmdp]);
+        res.status(201).json({ message: 'Utilisateur créé' });
+
     } catch (err) {
-        console.error('Erreur lors de la création de l\'utilisateur :', err)
-        res.status(500).send(err)
+        console.error('Erreur lors de la création de l\'utilisateur :', err);
+        res.status(500).send(err);
     }
-})
+});
+
 
 
 
@@ -140,28 +195,65 @@ router.post('/register', async (req, res) => {
  */
 router.post('/login', async (req, res) => {
     try {
-        const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: 'Erreur de connexion à la base de données' }) }
+        const db = await connectToDb();
+        if (!db) {
+            return res.status(500).json({ message: 'Erreur de connexion à la base de données' });
+        }
 
         const { username, mdp } = req.body;
 
-        const sql = 'SELECT * FROM users WHERE username = ?'
-        const [results] = await db.query(sql, [username])
-        if (results.length === 0) { return res.status(401).json({ message: 'Email ou mot de passe incorrect' }) }
+        // Validation des entrées
+        if (!username || !mdp) {
+            return res.status(400).json({ message: 'Nom d\'utilisateur et mot de passe sont requis.' });
+        }
+
+        // Validation de la longueur du champ username
+        if (username.length < 3) {
+            return res.status(400).json({ message: "La longueur du username doit être égale ou supérieure à 3" });
+        }
+
+        // Validation de la longueur et de la complexité du mot de passe
+        if (!validator.isLength(mdp, { min: 12 })) {
+            return res.status(400).json({ message: "Le mot de passe doit contenir au moins 12 caractères." });
+        }
+
+        const hasUpperCase = /[A-Z]/.test(mdp);
+        const hasLowerCase = /[a-z]/.test(mdp);
+        const hasNumber = /\d/.test(mdp);
+        const hasSpecialChar = /[^\w\s]/.test(mdp);
+
+        if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+            return res.status(400).json({
+                message: "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial."
+            });
+        }
+
+        // Vérification de l'utilisateur dans la base de données
+        const sql = 'SELECT * FROM users WHERE username = ?';
+        const [results] = await db.query(sql, [username]);
+
+        if (results.length === 0) {
+            return res.status(401).json({ message: 'Nom d\'utilisateur ou mot de passe incorrect' });
+        }
 
         const user = results[0];
         const isMatch = await bcrypt.compare(mdp, user.mdp);
-        if (!isMatch) { return res.status(401).json({ message: 'Email ou mot de passe incorrect' }) }
 
-        const code2FA = crypto.randomInt(100000, 999999);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Nom d\'utilisateur ou mot de passe incorrect' });
+        }
 
-        twoFA[user.username] = { code: code2FA, expiresIn: Date.now() + 10 * 60 * 1000 }
+        // Génération du code 2FA
+        const code2FA = crypto.randomInt(100000, 999999); // ou utiliser randomBytes
+        // Envisager d'utiliser une base de données ou Redis pour stocker le code 2FA
+
+        twoFA[user.username] = { code: code2FA, expiresIn: Date.now() + 10 * 60 * 1000 };
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS 
+                pass: process.env.EMAIL_PASS
             }
         });
 
@@ -182,6 +274,7 @@ router.post('/login', async (req, res) => {
         await transporter.sendMail(mailOptions);
 
         res.status(200).json({ message: 'Code de vérification envoyé. Veuillez vérifier votre email.' });
+
     } catch (err) {
         console.error('Erreur lors de l\'envoi de l\'email :', err);
         res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'email.', error: err.message });
@@ -322,17 +415,25 @@ router.post('/verify-2fa', async (req, res) => {
 router.get('/profile/:id', async (req, res) => {
     try {
         const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
+        if (!db) {
+            return res.status(500).json({ message: "Erreur à la base de données" })
+        }
 
-        const userId = req.params.id
-        
-        const [results] = await db.query(`SELECT username, prenom, nom, telephone, age, email, ville FROM users WHERE id_user = ?`, [userId])
+        const userId = parseInt(req.params.id);
+
+        // Vérifier si l'id est bien un nombre entier positif
+        if (isNaN(userId) || userId <= 0) {
+            return res.status(400).json({ message: "L'ID utilisateur fourni est invalide." });
+        }
+
+        const [results] = await db.query(`SELECT username, prenom, nom, age, email FROM users WHERE id_user = ?`, [userId])
 
         if (results.length === 0) {
-            return res.status(404).json({ message: 'Utilisateur non trouvé !'})
+            return res.status(404).json({ message: 'Utilisateur non trouvé !' })
         }
 
         res.status(200).json(results[0])
+
     } catch (err) {
         res.status(500).send(err)
     }
@@ -396,20 +497,50 @@ router.get('/profile/:id', async (req, res) => {
  */
 router.put('/profile/:id', async (req, res) => {
     try {
-        const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
+        const db = await connectToDb();
+        if (!db) {
+            return res.status(500).json({ message: "Erreur de connexion à la base de données" });
+        }
 
-        const userId = req.params.id
-        const { username, email, telephone, ville } = req.body
-        
-        const sql = (`UPDATE users SET username = ?, email = ?, telephone = ?, ville = ? WHERE id_user = ?`)
-        const [results] = await db.query(sql, [username, email, telephone, ville , userId])
+        const userId = parseInt(req.params.id);
 
-        res.status(200).json({ message: 'Profil mis à jour !' })
+        // Vérifier si l'id est bien un nombre entier positif
+        if (isNaN(userId) || userId <= 0) {
+            return res.status(400).json({ message: "L'ID utilisateur fourni est invalide." });
+        }
+
+        const { username, email } = req.body;
+
+        // Vérifier si les champs sont présents
+        if (!username || !email) {
+            return res.status(400).json({ message: "Le nom d'utilisateur ou l'email est manquant." });
+        }
+
+        // Vérification si l'email est déjà utilisé par un autre utilisateur
+        const emailCheck = 'SELECT * FROM users WHERE email = ? AND id != ?';
+        const [emailCheckResult] = await db.query(emailCheck, [email, userId]);
+        if (emailCheckResult.length > 0) {
+            return res.status(400).json({ message: "Cet email est déjà utilisé." });
+        }
+
+        // Vérification si le username est déjà utilisé par un autre utilisateur
+        const usernameCheck = 'SELECT * FROM users WHERE username = ? AND id != ?';
+        const [usernameCheckResult] = await db.query(usernameCheck, [username, userId]);
+        if (usernameCheckResult.length > 0) {
+            return res.status(400).json({ message: "Ce nom d'utilisateur est déjà utilisé." });
+        }
+
+        // Requête SQL pour mettre à jour les informations
+        const sql = 'UPDATE users SET username = ?, email = ? WHERE id = ?';
+        await db.query(sql, [username, email, userId]);
+
+        res.status(200).json({ message: 'Profil mis à jour avec succès !' });
     } catch (err) {
-        res.status(500).send(err)
+        console.error("Erreur lors de la mise à jour du profil :", err);
+        res.status(500).json({ message: "Erreur lors de la mise à jour du profil.", error: err.message });
     }
 });
+
 
 
 
@@ -490,35 +621,70 @@ router.put('/profile/:id', async (req, res) => {
 router.put('/profile/mdp/:id', async (req, res) => {
     try {
         const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
-
-        const { oldmdp, newmdp } = req.body
-        const userId = req.params.id
-
-        const sql = `SELECT mdp FROM users WHERE id_user = ?`
-        const [userResult] = await db.query(sql, [userId])
-
-        if (userResult.length ===0) {
-            return res.status(404).json({ messag: 'Utilisateur non trouvé !'})
+        if (!db) {
+            return res.status(500).json({ message: "Erreur à la base de données" })
         }
 
-        const user = userResult[0]
-        const isMatch = await bcrypt.compare(oldmdp, user.mdp)
+        const userId = parseInt(req.params.id);
+
+        // Vérifier si l'id est bien un nombre entier positif
+        if (isNaN(userId) || userId <= 0) {
+            return res.status(400).json({ message: "L'ID utilisateur fourni est invalide." });
+        }
+
+        const { oldmdp, newmdp } = req.body;
+
+        // Vérification des champs manquants
+        if (!oldmdp || !newmdp) {
+            return res.status(400).json({ message: "L'ancien ou le nouveau mot de passe est manquant." });
+        }
+
+        // Récupération de l'utilisateur
+        const sql = `SELECT mdp FROM users WHERE id = ?`;
+        const [userResult] = await db.query(sql, [userId]);
+
+        if (userResult.length === 0) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé !' });
+        }
+
+        const user = userResult[0];
+
+        // Vérification de l'ancien mot de passe
+        const isMatch = await bcrypt.compare(oldmdp, user.mdp);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Ancien mot de passe incorrect !'})
+            return res.status(400).json({ message: 'Ancien mot de passe incorrect !' });
         }
 
-        const hashedmdp = await bcrypt.hash(newmdp, 10)
+        // Validation du nouveau mot de passe
+        if (!validator.isLength(newmdp, { min: 12 })) {
+            return res.status(400).json({ message: "Le mot de passe doit contenir au moins 12 caractères." });
+        }
 
-        const updatesql = 'UPDATE users SET mdp = ? WHERE id_user = ?'
+        const hasUpperCase = /[A-Z]/.test(newmdp);
+        const hasLowerCase = /[a-z]/.test(newmdp);
+        const hasNumber = /\d/.test(newmdp);
+        const hasSpecialChar = /[^\w\s]/.test(newmdp);
+
+        if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+            return res.status(400).json({
+                message: "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial."
+            });
+        }
+
+        // Hachage du nouveau mot de passe
+        const hashedmdp = await bcrypt.hash(newmdp, 10);
+
+        // Mise à jour du mot de passe et de la date de modification (edited_at)
+        const updatesql = 'UPDATE users SET mdp = ?, edited_at = NOW() WHERE id = ?';
         await db.query(updatesql, [hashedmdp, userId]);
-        
+
         res.status(200).json({ message: 'Mot de passe mis à jour avec succès' });
     } catch (err) {
         console.error('Erreur lors de la mise à jour du mot de passe :', err);
-        res.status(500).json({ message: 'Erreur serveur', error: err })
+        res.status(500).json({ message: 'Erreur serveur', error: err });
     }
-})
+});
+
 
 
 
@@ -574,15 +740,24 @@ router.put('/profile/mdp/:id', async (req, res) => {
 router.delete('/profile/supprimerCompte/:id', async (req, res) => {
     try {
         const db = await connectToDb()
-        if (!db) { return res.status(500).json({ message: "Erreur à la base de données"})}
+        if (!db) {
+            return res.status(500).json({ message: "Erreur à la base de données" })
+        }
 
-        const userId = req.params.id
+        const userId = parseInt(req.params.id)
+
+        // Vérifier si l'id est bien un nombre entier positif
+        if (isNaN(userId) || userId <= 0) {
+            return res.status(400).json({ message: "L'ID utilisateur fourni est invalide." });
+        }
 
         const deleteSQL = 'DELETE FROM users WHERE id_user = ?'
+
         await db.query(deleteSQL, [userId])
 
-        res.status(200).json({ message: 'Compte supprimé avec succès'})
+        res.status(200).json({ message: 'Compte supprimé avec succès' })
     } catch (err) {
+
         console.error('Erreur lors de la suppression du compte :', err);
         res.status(500).json({ message: 'Erreur serveur', error: err });
     }
