@@ -35,7 +35,7 @@ router.get('/', (req, res) => {
         method: 'GET',
         hostname: 'moviesminidatabase.p.rapidapi.com',
         port: null,
-        path: '/movie/order/byRating/',
+        path: '/movie/order/byRating/?page=5',
         headers: {
             'x-rapidapi-key': process.env.RAPIDAPI_KEY,
             'x-rapidapi-host': process.env.HOST
