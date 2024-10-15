@@ -344,9 +344,6 @@ router.post('/verify-2fa', async (req, res) => {
         return res.status(401).json({ message: 'Code 2FA incorrect' });
     }
 
-    // Supprimer le code 2FA après utilisation
-    delete twoFA[username];
-
     // Rechercher l'utilisateur dans la base de données pour générer le token
     const db = await connectToDb();
     const sql = 'SELECT * FROM users WHERE username = ?';
@@ -366,6 +363,9 @@ router.post('/verify-2fa', async (req, res) => {
 
     // Retourner le token JWT après authentification réussie
     res.status(200).json({ message: 'Authentification réussie', token: token });
+
+    // Supprimer le code 2FA après utilisation
+    delete twoFA[username];
 });
 
 
