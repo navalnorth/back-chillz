@@ -166,7 +166,7 @@ router.post("/historique/:id/", async (req, res) => {
  *                   type: string
  *                   example: "Erreur interne du serveur."
  */
-router.get('/historique/:id', async (req, res) => {
+router.get('/historiqueTout/:id', async (req, res) => {
   try {
     const db = await connectToDb()
     if (!db) {
@@ -180,7 +180,7 @@ router.get('/historique/:id', async (req, res) => {
       return res.status(400).json({ message: "L'ID utilisateur fourni est invalide." });
     }
 
-    const [historique] = await db.query("SELECT * FROM historique where id = ?", [userId])
+    const [historique] = await db.query("SELECT * FROM historique where id_user = ?", [userId])
 
     if (historique.length === 0) {
       return res.status(404).json({ message: 'Aucun film trouvé pour cet utilisateur.' })

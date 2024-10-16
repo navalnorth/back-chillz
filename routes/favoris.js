@@ -149,7 +149,7 @@ router.get('/favorisTout/:id', async (req, res) => {
         
         const userId = req.params.id
 
-        const [favoris] = await db.query("SELECT * FROM favoris where id_user = ?", [userId])
+        const [favoris] = await db.query("SELECT * FROM favori where id_user = ?", [userId])
         if (favoris.length === 0) {
             return res.status(404).json({ message: 'Aucun film trouvé trouvé pour cet utilisateur.' })
         }

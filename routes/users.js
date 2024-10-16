@@ -362,7 +362,7 @@ router.post('/verify-2fa', async (req, res) => {
     );
 
     // Retourner le token JWT après authentification réussie
-    res.status(200).json({ message: 'Authentification réussie', token: token });
+    res.status(200).json({ message: 'Authentification réussie', token: token, userId: user.id });
 
     // Supprimer le code 2FA après utilisation
     delete twoFA[username];
@@ -426,7 +426,7 @@ router.get('/profile/:id', async (req, res) => {
             return res.status(400).json({ message: "L'ID utilisateur fourni est invalide." });
         }
 
-        const [results] = await db.query(`SELECT username, prenom, nom, age, email FROM users WHERE id_user = ?`, [userId])
+        const [results] = await db.query(`SELECT username, prenom, nom, age, email FROM users WHERE id = ?`, [userId])
 
         if (results.length === 0) {
             return res.status(404).json({ message: 'Utilisateur non trouvé !' })
