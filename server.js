@@ -56,11 +56,17 @@ app.use('/api/search/seriebyrating', listgetSeriesOrderByRatings);
 const listgetFilmsOrderByRatings = require('./apiRequest/listgetFilmsOrderByRatings.js')
 app.use('/api/search/filmbyrating', listgetFilmsOrderByRatings);
 
-// const listFilmByActor = require('./apiRequest/listFilmByActor.js')
-// app.use('/api/search/filmbyactorname', listFilmByActor)
+const listFilmByActor = require('./apiRequest/listFilmByActor.js')
+app.use('/api/search/filmbyactorname', listFilmByActor)
 
 const listSerieByActor = require('./apiRequest/listSerieByActor.js')
 app.use('/api/search/seriebyactorname', listSerieByActor)
+
+const getActorInfo = require('./apiRequest/getActorInfo.js')
+app.use('/api/search/actorDetail', getActorInfo)
+
+const movieCast = require('./apiRequest/movie.js')
+app.use('/api/search/castByMovie', movieCast)
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`)
