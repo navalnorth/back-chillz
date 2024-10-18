@@ -68,6 +68,9 @@ app.use('/api/search/actorDetail', getActorInfo)
 const movieCast = require('./apiRequest/movie.js')
 app.use('/api/search/castByMovie', movieCast)
 
+const actorCast = require('./apiRequest/getActorImage.js')
+app.use('/api/search/castInfoByMovie', actorCast)
+
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`)
 })
