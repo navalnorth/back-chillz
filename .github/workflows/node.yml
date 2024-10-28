@@ -20,7 +20,14 @@ jobs:
 
       - name: Conventional commits check
         uses: oknozor/cocogitto-action@v3
-        
+
+  check-for-cc:
+      runs-on: ubuntu-latest
+      steps:
+        - name: check-for-cc
+          id: check-for-cc
+          uses: agenthunt/conventional-commit-checker-action@v1.0.0
+          
   commits:
     runs-on: ubuntu-latest
     steps:
