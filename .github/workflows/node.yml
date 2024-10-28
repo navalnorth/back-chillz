@@ -9,6 +9,16 @@ on:
   workflow_dispatch:
   
 jobs:
+  commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Semver release
+        uses: cocogitto/cocogitto-action@main
+        with:
+          release: true
+          git-user: 'Cog Bot'
+          git-user-email: 'mycoolproject@org.org'
+      
   build:
 
     runs-on: ubuntu-latest
