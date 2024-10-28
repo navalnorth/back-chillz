@@ -36,7 +36,7 @@ jobs:
       uses: Krizzu/eslint-check-action@v1.1.0
       with:
         ghToken: ${{ secrets.GITHUB_TOKEN }}
-        eslintFiles: "lib, scripts"
-        eslintExt: "ts, tsx"
+        eslintFiles: "./"
+        eslintExt: "ts, tsx, js"
     - name: Run ESLint
       run: eslint . --ext .js,.jsx,.ts,.tsx
